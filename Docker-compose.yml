@@ -1,0 +1,49 @@
+version: "8.0"
+    
+services:
+  db:
+    image: mysql:latest
+    volumes:
+      - ./db:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: 1234
+      MYSQL_DATABASE: maniacontrol
+    container_name: db
+    command: --default-authentication-plugin=mysql_native_password
+  maniacontrol:
+    depends_on:
+      - db
+    image: noxinmortus/docker-maniacontrol
+    volumes:
+     - ./plugins:/maniacontrol/plugins
+    restart: always
+    environment:
+      MANIAPLANET_XMLRPC_PORT: 5005
+      MYSQL_SERVER_ADDRESS: db.dockercontainers_default
+      MYSQL_SERVER_PORT: 3306
+      MANIAPLANET_SERVER_ADDRESS: server
+      MANIAPLANET_XMLRPC_LOGIN: SuperAdmin
+      MANIAPLANET_XMLRPC_PASSWORD: SuperAdmin
+      MYSQL_USER: root
+      MYSQL_PASSWORD: 1234
+      MYSQL_DATABASE: maniacontrol
+      MASTER_ADMIN_USER: Jo5_nlbkTpKusvTMawjQbw
+  server:
+    image: harha/trackmania-server-docker:server
+    restart: on-failure
+    depends_on: 
+      - db
+    environment:
+      SERVER_TITLE: "Trackmania"
+      SERVER_NAME: "harha/trackmania-server-docker"
+    ports:
+      - "2350:2350/tcp"
+      - "2350:2350/udp"
+      - "3450:3450/tcp"
+      - "3450:3450/udp"
+    expose:
+      - 5005
+    volumes:
+      - ./cfg_server.xml:/home/server/tm_server/UserData/Config/cfg_server.xml:Z
+      - ./maps:/home/server/tm_server/UserData/Maps:z
